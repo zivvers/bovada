@@ -1,0 +1,8 @@
+**/creds/*
+**.DS_Store
+**__pycache__
+html_parse.html
+**.local
+**.conda
+**.cache
+**.ipython
