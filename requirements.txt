@@ -1,6 +1,7 @@
 requests==2.20.0
-pandas==0.25.1
-numpy==1.18.1
 ipython
 bs4
 pytz
+selenium
+gspread
+oauth2client

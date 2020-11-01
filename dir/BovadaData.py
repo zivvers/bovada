@@ -66,15 +66,59 @@ class BovadaData:
 
 
 
+    # this method updates the state of our driver such
+    # that all the leagues (groups in this code) are visible
+    # by clicking "show more"
+    # it does not return anything
+    def bovada_click_all_results(self):
+
+        url = "https://www.bovada.lv/sports/soccer"
+        self.driver.get(url)
+
+        more_elem = True
+        prev_num_groups = 0
 
 
-        #for game in games:
-        #
-        #    print( game.find_all('h4', {'class':'competitor-name'}).apply(lambda x: x.get_text()) )
-        #
-        #    team_1, team_2  = game.find_all('h4', {'class':'competitor-name'}).apply(lambda x: x.get_text())
-        #    print(f"{team_1} vs. {team_2}")
+        while( more_elem ):
 
+            try:
+
+                WebDriverWait(self.driver, 20).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button#showMore"))
+                ).click()
+                print("clicked!")
+
+            except:
+
+                more_elem = False
+
+            next_events_elem = WebDriverWait(self.driver, 25).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.next-events-bucket"))
+            )       
+
+            soup = BeautifulSoup(next_events_elem.get_attribute('innerHTML'), features="html.parser")
+            
+            scrape_time = datetime.now(timezone('US/Eastern')).strftime("%m/%d/%Y, %H:%M:%S")
+            
+            grouped_events = soup.find_all('div', {'class':'grouped-events'})
+
+            # button can still be clicked, but if no new
+            # groups no need to stress the server, break loop
+            if prev_num_groups >= len(grouped_events):
+                more_elem = False
+
+            # reset for next iter
+            prev_num_groups = len(grouped_events)
+
+            print(f'# groups: {len(grouped_events)}')
+
+        return next_events_elem
+
+
+
+    # our primary scraping function! calls bovada_click_all_results and then
+    # pulls raw HTML from our selenium driver, creating BeautifulSoup object which
+    # we can more quickly scrape and serves as a non-mutating representation of the data
     def bovada_scrape(self, url="https://www.bovada.lv/sports/soccer"):
 
         self.driver.get(url)
@@ -83,12 +127,10 @@ class BovadaData:
         #try:
         print("awaiting load...")
 
-        happening_elem = WebDriverWait(self.driver, 25).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.next-events-bucket"))
-        )
+        next_events_elem = self.bovada_click_all_results()
 
         # selenium elemet grabbing a bit slow... let's grab HTML & parse
-        soup = BeautifulSoup(happening_elem.get_attribute('innerHTML'), features="html.parser")
+        soup = BeautifulSoup(next_events_elem.get_attribute('innerHTML'), features="html.parser")
         scrape_time = datetime.now(timezone('US/Eastern')).strftime("%m/%d/%Y, %H:%M:%S")
         grouped_events = soup.find_all('div', {'class':'grouped-events'})
 
