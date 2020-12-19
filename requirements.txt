@@ -5,3 +5,4 @@ pytz
 selenium
 gspread
 oauth2client
+pandas

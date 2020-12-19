@@ -1,21 +1,23 @@
-remote-webdriver:
-  image: selenium/standalone-chrome
-  volumes:
-    - /dev/shm:/dev/shm
-  ports:
-    - "4444:4444"
-  expose:
-    - 4444
+version: "2"
+services:
+   remote-webdriver:
+     image: selenium/standalone-chrome
+     volumes:
+       - /dev/shm:/dev/shm
+     ports:
+       - "4444:4444"
+     expose:
+       - 4444
 
-pystuff:
-  build: .
-  container_name: pystuff
-  links:
-    - remote-webdriver
-  volumes:
-    - ./dir:/home/ana
-  #ports:
+   pystuff:
+     build: .
+     container_name: pystuff
+     depends_on:
+       - remote-webdriver
+     volumes:
+       - ./dir:/home/ana
+     #ports:
 
-  stdin_open: true
-  tty: true
-  entrypoint: /bin/sh
+     #stdin_open: true
+     #tty: true
+     #entrypoint: /bin/bash

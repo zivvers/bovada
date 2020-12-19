@@ -1,4 +1,4 @@
-
+import logging
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
@@ -12,17 +12,35 @@ from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from pytz import timezone
 from bs4 import BeautifulSoup
+import sys
+import time
 
 
 
 class BovadaData:
     def __init__(self):
         
-        #self.initURL = initURL
+        self.logger = logging.getLogger('bovada_scrape')
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-        self.driver = webdriver.Remote(
-            command_executor='remote-webdriver:4444/wd/hub',
-            desired_capabilities=DesiredCapabilities.CHROME )
+        #logging.error("in constru"
+        # connectionIter is weird local var 
+        connectionIter = 0
+        while True:
+            try:
+                
+                self.driver = webdriver.Remote(
+                    command_executor='remote-webdriver:4444/wd/hub',
+                    desired_capabilities=DesiredCapabilities.CHROME )
+                
+                self.logger.info("established connection to remote selenium container")
+                break
+            except:
+                #print("Unexpected error:", sys.exc_info()[0])
+                connectionIter += 1
+                if connectionIter % 5 == 0:
+                    self.logger.error( "have tried connecting to Selenium {} times...".format(connectionIter) )
+                time.sleep(1)
 
         #self.bovada_scrape(self.initURL)
 
@@ -30,9 +48,9 @@ class BovadaData:
     def scrape_group(self, group, scrape_time):
     
         group_title = group.find('a', {'class' : 'league-header-collapsible__description'}).get_text().strip()
-        print(f"LEAGUE: {group_title}")
+        #print(f"LEAGUE: {group_title}")
         games = group.find_all("sp-coupon")
-        print(f"# games to scrape: {len(games)}")
+        #print(f"# games to scrape: {len(games)}")
         
         poten_winners = [ elem.get_text() for elem in group.find_all('h4', {'class':['competitor-name']}) ]
 
@@ -43,9 +61,9 @@ class BovadaData:
         teams = list(zip(poten_winners[::2], poten_winners[1::2]))
         odds = list(zip(bets[2::7], bets[3::7], bets[4::7]))
 
-        print(f'# teams: {len(teams)}')
-        print(f'# odds: {len(odds)}')
-        print(f'# game_times: {len(game_times)}')
+        #print(f'# teams: {len(teams)}')
+        #print(f'# odds: {len(odds)}')
+        #print(f'# game_times: {len(game_times)}')
         #assert(len(teams) == len(odds))
 
         rows = []
@@ -60,7 +78,7 @@ class BovadaData:
                 #print(f"SUCCESS: {row}")
             except:
 
-                print(f"could not parse game in {group_title}")
+                self.logger.error(f"could not parse game in {group_title}")
 
         return rows
 
@@ -86,7 +104,6 @@ class BovadaData:
                 WebDriverWait(self.driver, 20).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "button#showMore"))
                 ).click()
-                print("clicked!")
 
             except:
 
@@ -110,7 +127,7 @@ class BovadaData:
             # reset for next iter
             prev_num_groups = len(grouped_events)
 
-            print(f'# groups: {len(grouped_events)}')
+            self.logger.info(f'# soccer groups: {len(grouped_events)}')
 
         return next_events_elem
 
@@ -124,8 +141,6 @@ class BovadaData:
         self.driver.get(url)
         #self.driver.implicitly_wait(5)
         
-        #try:
-        print("awaiting load...")
 
         next_events_elem = self.bovada_click_all_results()
 
@@ -134,7 +149,7 @@ class BovadaData:
         scrape_time = datetime.now(timezone('US/Eastern')).strftime("%m/%d/%Y, %H:%M:%S")
         grouped_events = soup.find_all('div', {'class':'grouped-events'})
 
-        print(f"# grouped events: {len(grouped_events)}")
+        #print(f"# grouped events: {len(grouped_events)}")
 
         all_bets = [["scrape_time", "league_name", "game_time", "team_1", "team_2", "odds_team_1", "odds_team_2", "odds_draw"]]
 

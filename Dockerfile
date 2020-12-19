@@ -5,3 +5,5 @@ FROM python:3.8-slim
 RUN pip install -U pip
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
+WORKDIR /home/ana
+CMD ["python", "-u", "Main.py"]
