@@ -44,6 +44,34 @@ class BovadaData:
 
         #self.bovada_scrape(self.initURL)
 
+    # click for tomorrow's games
+    def click_tomorrow(self):
+
+        try:
+
+            WebDriverWait(self.driver, 20).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, "div.time-filter sp-time-filter figure"))
+            ).click() 
+            #body > bx-site > ng-component > div > sp-sports-ui > div > main > div > section > main > sp-path-event > div > header > sp-filter > section > div.time-filter > sp-time-filter > figure
+            self.logger.info("successfully clicked time filter")
+        except Exception as e:
+            self.logger.error("could not click on time filter!")
+            raise
+            
+            #self.driver.save_screenshot("failedClickDate.png")
+
+        WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "sp-time-filter-element"))
+        )  
+
+        self.driver.find_elements(By.CSS_SELECTOR, "sp-time-filter-element")[5].click()
+
+        WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div.grouped-events"))
+        )  
+
+
+
     # takes beautifulsoup event group, returns dat for games
     def scrape_group(self, group, scrape_time):
     
@@ -140,7 +168,7 @@ class BovadaData:
 
         self.driver.get(url)
         #self.driver.implicitly_wait(5)
-        
+        self.click_tomorrow()
 
         next_events_elem = self.bovada_click_all_results()
 
