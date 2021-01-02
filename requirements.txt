@@ -6,3 +6,4 @@ selenium
 gspread
 oauth2client
 pandas
+pyyaml
