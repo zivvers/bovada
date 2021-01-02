@@ -14,11 +14,12 @@ from pytz import timezone
 from bs4 import BeautifulSoup
 import sys
 import time
+from functools import reduce
 
 
 
 class BovadaData:
-    def __init__(self):
+    def __init__(self, remote_selenium_url='remo:4444/wd/hub'):
         
         self.logger = logging.getLogger('bovada_scrape')
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -30,7 +31,7 @@ class BovadaData:
             try:
                 
                 self.driver = webdriver.Remote(
-                    command_executor='remote-webdriver:4444/wd/hub',
+                    command_executor=remote_selenium_url,
                     desired_capabilities=DesiredCapabilities.CHROME )
                 
                 self.logger.info("established connection to remote selenium container")
@@ -82,15 +83,28 @@ class BovadaData:
         
         poten_winners = [ elem.get_text() for elem in group.find_all('h4', {'class':['competitor-name']}) ]
 
-        bets = [ elem.get_text() for elem in group.find_all("span", {"class":"bet-price"}) ]
+        try:
+            bets = [item.get_text() for item in list(reduce(lambda major_li, minor_li : major_li + minor_li
+            , map(lambda elem: elem.find_all("span", {"class":"bet-price"})
+                , group.select("sp-outcomes.markets-container sp-three-way-vertical.market-type")[1::3])) )]
 
-        game_times = [elem.parent.get_text().strip() for elem in group.find_all('time', {'class':'clock'})[::2]]
+        except TypeError: # reduce can't operate on empty list
+            bets = []
+
+
+        #bets = [ elem.get_text() for elem in [ elem.find_all("span", {"class":"bet-price"}) for elem in group.select("sp-outcomes.markets-container sp-three-way-vertical.market-type")[1::3] ]] #group.select("sp-three-way-vertical.market-type ")
+
+        game_times = [ elem.parent.get_text().strip() for elem in group.find_all('time', {'class':'clock'}) ]
         
         teams = list(zip(poten_winners[::2], poten_winners[1::2]))
-        odds = list(zip(bets[2::7], bets[3::7], bets[4::7]))
+        #odds = list(zip(bets[2::7], bets[3::7], bets[4::7]))
+        odds = list(zip(bets[::3], bets[1::3], bets[2::3]))
 
-        #print(f'# teams: {len(teams)}')
-        #print(f'# odds: {len(odds)}')
+        print(f'# teams: {len(teams)}')
+        print(f'# odds: {len(odds)}')
+
+        print(teams)
+        print(odds)
         #print(f'# game_times: {len(game_times)}')
         #assert(len(teams) == len(odds))
 

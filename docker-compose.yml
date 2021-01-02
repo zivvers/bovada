@@ -2,6 +2,7 @@ version: "2"
 services:
    remote-webdriver:
      image: selenium/standalone-chrome
+     container_name: remo
      volumes:
        - /dev/shm:/dev/shm
      ports:

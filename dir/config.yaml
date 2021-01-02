@@ -1,0 +1,4 @@
+remote_selenium_name: remo
+port: 4444
+google_sheet_url: https://docs.google.com/spreadsheets/d/13SFoQusyqTlx6ghqyvHZ7G3UsE9wjmZ3y0jGJ_ULaII/edit#gid=0
+google_sheet_tab: Test2
